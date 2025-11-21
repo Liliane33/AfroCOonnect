@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 
 const apiKey = process.env.API_KEY || ''; // Safe fallback for compilation
 
@@ -36,5 +36,51 @@ export const enhanceAdDescription = async (
   } catch (error) {
     console.error("Error enhancing description:", error);
     return draftText;
+  }
+};
+
+export const predictCategoryAndType = async (
+  text: string
+): Promise<{ category: 'SERVICE' | 'TRANSPORT'; serviceType?: string } | null> => {
+  if (!ai || !text.trim()) return null;
+
+  try {
+    const prompt = `
+      Analyse le titre de cette annonce : "${text}".
+      Détermine s'il s'agit d'une offre de SERVICE (prestation, main d'oeuvre) ou de TRANSPORT (colis, voyage, GP).
+      
+      Si c'est SERVICE, devine le type le plus proche parmi : 'Ménage', 'Plomberie', 'Coiffure', 'Jardinage', 'Soutien Scolaire', 'Autre'.
+      Si c'est TRANSPORT, le type est null.
+    `;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            category: {
+              type: Type.STRING,
+              enum: ['SERVICE', 'TRANSPORT'],
+              description: "La catégorie principale de l'annonce"
+            },
+            serviceType: {
+              type: Type.STRING,
+              enum: ['Ménage', 'Plomberie', 'Coiffure', 'Jardinage', 'Soutien Scolaire', 'Autre'],
+              nullable: true,
+              description: "Le type de service si la catégorie est SERVICE"
+            }
+          }
+        }
+      }
+    });
+
+    const result = JSON.parse(response.text || '{}');
+    return result;
+  } catch (error) {
+    console.error("Error predicting category:", error);
+    return null;
   }
 };

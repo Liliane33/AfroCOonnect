@@ -1,6 +1,6 @@
 import React from 'react';
 import { Ad, AdCategory } from '../types';
-import { MapPin, Calendar, ArrowRight, Star, MessageCircle } from 'lucide-react';
+import { MapPin, Calendar, Eye } from 'lucide-react';
 
 interface AdCardProps {
   ad: Ad;
@@ -11,7 +11,7 @@ export const AdCard: React.FC<AdCardProps> = ({ ad, onClick }) => {
   const isTransport = ad.category === AdCategory.TRANSPORT;
 
   return (
-    <div onClick={onClick} className="group bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-100 overflow-hidden transition-all cursor-pointer flex flex-col h-full">
+    <div onClick={onClick} className="group bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-100 overflow-hidden transition-all cursor-pointer flex flex-col h-full relative">
       <div className="relative h-48 overflow-hidden">
         <img 
           src={ad.image} 
@@ -49,13 +49,17 @@ export const AdCard: React.FC<AdCardProps> = ({ ad, onClick }) => {
 
         <p className="text-gray-600 text-sm line-clamp-2 mb-4 flex-grow">{ad.description}</p>
 
-        <div className="flex items-center justify-between pt-3 border-t border-gray-50 mt-auto">
-          <div className="flex items-center space-x-2">
-            <img src={ad.authorAvatar} alt={ad.authorName} className="w-6 h-6 rounded-full" />
-            <span className="text-xs font-medium text-gray-600">{ad.authorName}</span>
+        <div className="flex items-center justify-between pt-3 border-t border-gray-50 mt-auto gap-2">
+          <div className="flex items-center space-x-2 overflow-hidden">
+            <img src={ad.authorAvatar} alt={ad.authorName} className="w-6 h-6 rounded-full flex-shrink-0" />
+            <span className="text-xs font-medium text-gray-600 truncate">{ad.authorName}</span>
           </div>
-          <button className="text-primary hover:bg-primary/10 p-2 rounded-full transition">
-            <MessageCircle size={18} />
+          
+          <button 
+            className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-primary hover:border-primary px-4 py-2 rounded-lg text-sm font-bold shadow-sm flex items-center gap-2 transition"
+          >
+            <Eye size={16} />
+            Voir détails
           </button>
         </div>
       </div>

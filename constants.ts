@@ -1,10 +1,13 @@
-import { Ad, AdCategory, ServiceType, User, UserRole } from './types';
+
+import { Ad, AdCategory, ServiceType, User, UserRole, Message } from './types';
 
 export const MOCK_USERS: User[] = [
   {
     id: 'u1',
     name: 'Aminata Diallo',
     email: 'aminata@example.com',
+    phone: '+225 0707070707',
+    address: 'Cocody, Abidjan',
     avatar: 'https://picsum.photos/seed/aminata/100/100',
     role: UserRole.PROVIDER,
     bio: 'Experte en coiffure et tresses africaines.',
@@ -16,6 +19,8 @@ export const MOCK_USERS: User[] = [
     id: 'u2',
     name: 'Jean Kouame',
     email: 'jean@example.com',
+    phone: '+33 612345678',
+    address: '15 Rue de Paris',
     avatar: 'https://picsum.photos/seed/jean/100/100',
     role: UserRole.TRAVELER,
     bio: 'Je voyage souvent entre Paris et Abidjan.',
@@ -27,6 +32,7 @@ export const MOCK_USERS: User[] = [
     id: 'admin1',
     name: 'Super Admin',
     email: 'admin@afroconnect.com',
+    phone: '0000000000',
     avatar: 'https://picsum.photos/seed/admin/100/100',
     role: UserRole.ADMIN,
     rating: 5.0,
@@ -67,5 +73,32 @@ export const MOCK_ADS: Ad[] = [
     status: 'ACTIVE',
     tags: ['Voyage', 'Colis'],
     image: 'https://picsum.photos/seed/travel/400/300'
+  }
+];
+
+export const MOCK_MESSAGES: Message[] = [
+  {
+    id: 'm1',
+    senderId: 'u1',
+    receiverId: 'currentUser', // Simulating the logged-in user
+    content: 'Bonjour, est-ce que vous êtes disponible ce samedi ?',
+    timestamp: new Date(Date.now() - 86400000).toISOString(),
+    isRead: true
+  },
+  {
+    id: 'm2',
+    senderId: 'currentUser',
+    receiverId: 'u1',
+    content: 'Bonjour Aminata, oui tout à fait. Vers quelle heure ?',
+    timestamp: new Date(Date.now() - 80000000).toISOString(),
+    isRead: true
+  },
+  {
+    id: 'm3',
+    senderId: 'u1',
+    receiverId: 'currentUser',
+    content: 'Super ! Disons 14h ?',
+    timestamp: new Date(Date.now() - 7000000).toISOString(),
+    isRead: false
   }
 ];

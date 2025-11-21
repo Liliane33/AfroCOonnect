@@ -1,5 +1,7 @@
 {
   "name": "Copy of AfroConnect - Services & Colis",
   "description": "Une plateforme moderne reliant prestataires de services, clients et voyageurs pour le transport de colis. Intégration IA pour les annonces et paiements mobiles.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "geolocation"
+  ]
 }
