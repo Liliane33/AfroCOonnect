@@ -3,9 +3,23 @@ import { Navbar } from './components/Navbar';
 import { AdCard } from './components/AdCard';
 import { CreateAd } from './components/CreateAd';
 import { PaymentModal } from './components/PaymentModal';
-import { Ad, AdCategory, User, UserRole } from './types';
+import { Ad, AdCategory, User, UserRole, ServiceType } from './types';
 import { MOCK_ADS, MOCK_USERS } from './constants';
-import { Search, MapPin, Filter, MessageCircle, AlertCircle } from 'lucide-react';
+import { 
+  Search, MapPin, Filter, MessageCircle, AlertCircle, 
+  Sparkles, Wrench, Scissors, Flower2, GraduationCap, 
+  Plane, Package, LayoutGrid, X
+} from 'lucide-react';
+
+// Définition des catégories pour l'affichage
+const SERVICE_CATEGORIES = [
+  { id: 'cleaning', label: 'Ménage', icon: Sparkles, color: 'text-blue-500', bg: 'bg-blue-50', filterTag: ServiceType.CLEANING, targetView: 'SERVICES' },
+  { id: 'plumbing', label: 'Plomberie', icon: Wrench, color: 'text-slate-500', bg: 'bg-slate-50', filterTag: ServiceType.PLUMBING, targetView: 'SERVICES' },
+  { id: 'hair', label: 'Coiffure', icon: Scissors, color: 'text-pink-500', bg: 'bg-pink-50', filterTag: ServiceType.HAIRDRESSING, targetView: 'SERVICES' },
+  { id: 'garden', label: 'Jardinage', icon: Flower2, color: 'text-green-500', bg: 'bg-green-50', filterTag: ServiceType.GARDENING, targetView: 'SERVICES' },
+  { id: 'school', label: 'Soutien', icon: GraduationCap, color: 'text-indigo-500', bg: 'bg-indigo-50', filterTag: ServiceType.TUTORING, targetView: 'SERVICES' },
+  { id: 'transport', label: 'Colis & Voyage', icon: Plane, color: 'text-orange-500', bg: 'bg-orange-50', filterTag: null, targetView: 'TRANSPORT' },
+];
 
 const App: React.FC = () => {
   // App State
@@ -16,6 +30,7 @@ const App: React.FC = () => {
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
+  const [activeTagFilter, setActiveTagFilter] = useState<string | null>(null);
 
   // Modal State
   const [showPayment, setShowPayment] = useState(false);
@@ -23,17 +38,24 @@ const App: React.FC = () => {
 
   // Derived Data
   const filteredAds = ads.filter(ad => {
+    // 1. Search & Location
     const matchesSearch = ad.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           ad.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesLocation = !locationFilter || ad.location.toLowerCase().includes(locationFilter.toLowerCase());
     
-    if (view === 'SERVICES') return ad.category === AdCategory.SERVICE && matchesSearch && matchesLocation;
-    if (view === 'TRANSPORT') return ad.category === AdCategory.TRANSPORT && matchesSearch && matchesLocation;
-    return matchesSearch && matchesLocation; // For HOME view show a mix or feature
+    // 2. Category View Filter
+    let matchesView = true;
+    if (view === 'SERVICES') matchesView = ad.category === AdCategory.SERVICE;
+    if (view === 'TRANSPORT') matchesView = ad.category === AdCategory.TRANSPORT;
+
+    // 3. Specific Tag Filter (clicked from categories)
+    const matchesTag = activeTagFilter ? ad.tags.includes(activeTagFilter) : true;
+
+    return matchesSearch && matchesLocation && matchesView && matchesTag;
   });
 
+  // Handlers
   const handleLogin = () => {
-    // Simulate login as Provider
     setCurrentUser(MOCK_USERS[0]);
   };
 
@@ -44,7 +66,7 @@ const App: React.FC = () => {
 
   const handleCreateAd = (newAd: Ad) => {
     setAds([newAd, ...ads]);
-    setView('SERVICES'); // Redirect to list
+    setView('SERVICES'); 
   };
 
   const handleAdClick = (ad: Ad) => {
@@ -58,6 +80,20 @@ const App: React.FC = () => {
 
   const handleDeleteAd = (id: string) => {
     setAds(ads.filter(a => a.id !== id));
+  };
+
+  const handleCategoryClick = (category: typeof SERVICE_CATEGORIES[0]) => {
+    setView(category.targetView);
+    setActiveTagFilter(category.filterTag);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleNavigate = (newView: string) => {
+    setView(newView);
+    // Reset tag filter when navigating via main menu unless creating an ad
+    if (newView !== 'CREATE_AD') {
+      setActiveTagFilter(null);
+    }
   };
 
   // Render Views
@@ -153,49 +189,89 @@ const App: React.FC = () => {
         
         {/* Hero Section for Home */}
         {view === 'HOME' && (
-          <div className="mb-12 bg-gradient-to-r from-primary to-teal-800 rounded-3xl p-8 md:p-16 text-white shadow-2xl relative overflow-hidden">
-            <div className="relative z-10 max-w-2xl">
-              <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">Trouvez le service idéal ou envoyez vos colis.</h1>
-              <p className="text-xl opacity-90 mb-8">AfroConnect simplifie vos besoins quotidiens et vos échanges internationaux.</p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <button onClick={() => setView('SERVICES')} className="bg-secondary hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-bold text-lg transition">Trouver un prestataire</button>
-                <button onClick={() => setView('TRANSPORT')} className="bg-white/10 backdrop-blur hover:bg-white/20 border border-white/30 px-8 py-4 rounded-xl font-bold text-lg transition">Envoyer un colis</button>
+          <>
+            <div className="mb-12 bg-gradient-to-r from-primary to-teal-800 rounded-3xl p-8 md:p-16 text-white shadow-2xl relative overflow-hidden">
+              <div className="relative z-10 max-w-2xl">
+                <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">Trouvez le service idéal ou envoyez vos colis.</h1>
+                <p className="text-xl opacity-90 mb-8">AfroConnect simplifie vos besoins quotidiens et vos échanges internationaux.</p>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <button onClick={() => handleNavigate('SERVICES')} className="bg-secondary hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-bold text-lg transition">Trouver un prestataire</button>
+                  <button onClick={() => handleNavigate('TRANSPORT')} className="bg-white/10 backdrop-blur hover:bg-white/20 border border-white/30 px-8 py-4 rounded-xl font-bold text-lg transition">Envoyer un colis</button>
+                </div>
+              </div>
+              <div className="absolute right-0 bottom-0 opacity-20 pointer-events-none transform translate-x-1/4 translate-y-1/4">
+                  <svg width="600" height="600" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="#FFFFFF" d="M44.7,-76.4C58.9,-69.2,71.8,-59.1,81.6,-46.6C91.4,-34.1,98.2,-19.2,95.8,-5.3C93.5,8.6,82,21.5,70.8,32.4C59.6,43.3,48.7,52.2,36.9,60.8C25.1,69.4,12.5,77.7,-1.2,79.8C-14.9,81.9,-29.8,77.8,-42.6,70.1C-55.4,62.4,-66.1,51.1,-74.1,38.3C-82.1,25.5,-87.4,11.2,-85.7,-2.4C-84,-16,-75.3,-28.9,-65.1,-39.5C-54.9,-50.1,-43.2,-58.4,-31.2,-66.8C-19.2,-75.2,-6.9,-83.7,4.2,-90.9L15.3,-98.1L44.7,-76.4Z" transform="translate(100 100)" />
+                  </svg>
               </div>
             </div>
-            <div className="absolute right-0 bottom-0 opacity-20 pointer-events-none transform translate-x-1/4 translate-y-1/4">
-                 <svg width="600" height="600" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                    <path fill="#FFFFFF" d="M44.7,-76.4C58.9,-69.2,71.8,-59.1,81.6,-46.6C91.4,-34.1,98.2,-19.2,95.8,-5.3C93.5,8.6,82,21.5,70.8,32.4C59.6,43.3,48.7,52.2,36.9,60.8C25.1,69.4,12.5,77.7,-1.2,79.8C-14.9,81.9,-29.8,77.8,-42.6,70.1C-55.4,62.4,-66.1,51.1,-74.1,38.3C-82.1,25.5,-87.4,11.2,-85.7,-2.4C-84,-16,-75.3,-28.9,-65.1,-39.5C-54.9,-50.1,-43.2,-58.4,-31.2,-66.8C-19.2,-75.2,-6.9,-83.7,4.2,-90.9L15.3,-98.1L44.7,-76.4Z" transform="translate(100 100)" />
-                </svg>
+
+            {/* SERVICES CATEGORIES GRID */}
+            <div className="mb-16">
+              <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                <LayoutGrid className="text-primary" size={24} />
+                Explorer par catégorie
+              </h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {SERVICE_CATEGORIES.map((cat) => (
+                  <button 
+                    key={cat.id}
+                    onClick={() => handleCategoryClick(cat)}
+                    className="flex flex-col items-center justify-center p-6 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 group"
+                  >
+                    <div className={`w-14 h-14 rounded-full ${cat.bg} ${cat.color} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
+                      <cat.icon size={28} />
+                    </div>
+                    <span className="font-medium text-gray-700 group-hover:text-primary">{cat.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          </>
         )}
 
         {/* Search & Filters */}
         {(view === 'SERVICES' || view === 'TRANSPORT') && (
-            <div className="mb-8 space-y-4 md:space-y-0 md:flex md:items-center md:space-x-4">
-            <div className="flex-grow relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                <input 
-                type="text" 
-                placeholder={view === 'SERVICES' ? "Rechercher un plombier, coiffeur..." : "Rechercher un trajet..."}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
-                />
-            </div>
-            <div className="relative md:w-1/3">
-                <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                <input 
-                type="text" 
-                placeholder="Ville (ex: Abidjan)"
-                value={locationFilter}
-                onChange={(e) => setLocationFilter(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
-                />
-            </div>
-            <button className="p-3 bg-gray-100 rounded-xl hover:bg-gray-200 text-gray-600">
-                <Filter size={20} />
-            </button>
+            <div className="mb-8 space-y-4">
+              <div className="md:flex md:items-center md:space-x-4 space-y-4 md:space-y-0">
+                <div className="flex-grow relative">
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                    <input 
+                    type="text" 
+                    placeholder={view === 'SERVICES' ? "Rechercher un plombier, coiffeur..." : "Rechercher un trajet..."}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+                    />
+                </div>
+                <div className="relative md:w-1/3">
+                    <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                    <input 
+                    type="text" 
+                    placeholder="Ville (ex: Abidjan)"
+                    value={locationFilter}
+                    onChange={(e) => setLocationFilter(e.target.value)}
+                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+                    />
+                </div>
+                <button className="p-3 bg-gray-100 rounded-xl hover:bg-gray-200 text-gray-600">
+                    <Filter size={20} />
+                </button>
+              </div>
+              
+              {/* Active Filter Badge */}
+              {activeTagFilter && (
+                <div className="flex items-center mt-2">
+                  <span className="text-sm text-gray-500 mr-2">Filtre actif:</span>
+                  <button 
+                    onClick={() => setActiveTagFilter(null)}
+                    className="flex items-center bg-primary text-white px-3 py-1 rounded-full text-sm font-medium hover:bg-teal-700 transition"
+                  >
+                    {activeTagFilter}
+                    <X size={14} className="ml-1" />
+                  </button>
+                </div>
+              )}
             </div>
         )}
 
@@ -217,7 +293,12 @@ const App: React.FC = () => {
                         <div className="inline-block p-4 bg-gray-50 rounded-full mb-4">
                             <Search size={40} />
                         </div>
-                        <p className="text-lg">Aucune annonce trouvée pour votre recherche.</p>
+                        <p className="text-lg">Aucune annonce trouvée pour ces critères.</p>
+                        {activeTagFilter && (
+                          <button onClick={() => setActiveTagFilter(null)} className="mt-4 text-primary font-medium hover:underline">
+                            Voir toutes les annonces
+                          </button>
+                        )}
                     </div>
                 )}
             </>
@@ -228,7 +309,7 @@ const App: React.FC = () => {
             <div>
                 <div className="flex justify-between items-end mb-6">
                     <h2 className="text-2xl font-bold text-gray-800">Récemment ajoutés</h2>
-                    <button onClick={() => setView('SERVICES')} className="text-primary font-semibold hover:underline">Voir tout</button>
+                    <button onClick={() => handleNavigate('SERVICES')} className="text-primary font-semibold hover:underline">Voir tout</button>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {ads.slice(0, 4).map(ad => (
@@ -246,7 +327,7 @@ const App: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-slate-50">
       <Navbar 
         currentUser={currentUser} 
-        onNavigate={setView} 
+        onNavigate={handleNavigate} 
         onLoginClick={handleLogin} 
         onLogout={handleLogout}
         currentView={view}
